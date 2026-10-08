@@ -1,0 +1,43 @@
+# Sharia screening record. Eligibility is a HARD FILTER, not an optimisation variable.
+# The system enforces only what is written here; the religious judgment is the user's.
+#
+# user_decision: approved | pending | rejected. Only the user changes it.
+# An asset may be added to config/halal_universe.yaml (allowed_symbols) only if its user_decision is "approved"
+# (tests/test_sharia_screen.py fails otherwise). Everything except BTC is "pending" and is used for research only.
+#
+# Evidence and reasoning: RESEARCH.md Appendix A
+
+criteria:                      # the checklist each asset was read against (edit to match your own standard)
+  C1: "Spot ownership only: no leverage, margin, futures, options, lending, borrowing, yield or staking for the user"
+  C2: "The token itself has no interest/yield mechanism (not rebasing, not a deposit or lending receipt token)"
+  C3: "The token has real utility (medium of exchange, network fee/gas, access), not purely speculative or a meme"
+  C4: "The project's core business is not prohibited (gambling, interest-lending, alcohol, etc.)"
+  C5: "Ecosystem: material activity built on the network that is impermissible is flagged, not ignored"
+  C6: "No issuer promise of returns, buy-backs or profit share"
+  C7: "Not a meme / joke / celebrity token"
+  C8: "Held in your own Binance spot balance (possession), settled immediately; no Earn/Simple Earn products"
+
+assets:
+  BTC/USDT:
+    project: "Bitcoin: proof-of-work peer-to-peer payment / store-of-value network, no issuer, fixed supply schedule"
+    flag: low
+    user_decision: approved     # already your universe
+  ETH/USDT:
+    project: "Ethereum: general smart-contract platform; ETH pays gas and is staking collateral"
+    flag: medium                # ecosystem (C5): large lending/staking/derivatives activity runs on the network
+    user_lean: "probably approve (stated 2026-10-02; NOT final). Concern raised: capital is fixed at 300, so sharing it with other assets might affect BTC."
+    user_decision: pending
+  SOL/USDT:
+    project: "Solana: high-throughput smart-contract platform; SOL pays fees and is staking collateral"
+    flag: medium_high           # ecosystem (C5): meme-token launch activity, lending, perps; aggregators disagree
+    user_lean: "probably approve (stated 2026-10-02; NOT final). Concern raised: capital is fixed at 300, so sharing it with other assets might affect BTC."
+    user_decision: pending
+  ADA/USDT:
+    project: "Cardano: proof-of-stake smart-contract platform; ADA pays fees and is staking collateral"
+    flag: low_medium            # small ecosystem (C5), same platform proviso as ETH
+    user_lean: "probably approve (stated 2026-10-02; NOT final). Concern raised: capital is fixed at 300, so sharing it with other assets might affect BTC."
+    user_decision: pending
+  LTC/USDT:
+    project: "Litecoin: proof-of-work payment coin forked from Bitcoin; no smart-contract ecosystem"
+    flag: low                   # weak adoption; optional confidential-transaction extension (MWEB)
+    user_decision: pending

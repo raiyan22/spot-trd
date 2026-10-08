@@ -1,0 +1,18 @@
+{
+ "started_utc": "2026-10-02T08:57:36",
+ "start_equity": 300.0,
+ "target_equity": 350.0,
+ "milestones": [
+  310,
+  320,
+  330,
+  340,
+  350
+ ],
+ "contributions_allowed": 0,
+ "mode": "paper",
+ "rules": "v2 frozen",
+ "old_journal_archived_as": "journal/archive/paper_journal_20261002T085736_before_300_experiment.csv",
+ "operating_mode": "forward observation",
+ "contribution_policy": "exceptional only, max $100 in any single year, never counted as trading profit"
+}

@@ -1,0 +1,36 @@
+# High-volatility US macro events. No new entries are planned when one falls on the card day or the next day.
+# Sources: federalreserve.gov/monetarypolicy/fomccalendars.htm, bls.gov/schedule/news_release/cpi.htm
+# Update yearly: BLS had not published 2027 CPI dates as of 2026-10-01.
+block_window_days: 1
+
+fomc_decisions:   # second day of each meeting, when the statement is released
+  - 2026-01-28
+  - 2026-03-18
+  - 2026-04-29
+  - 2026-06-17
+  - 2026-07-29
+  - 2026-09-16
+  - 2026-10-28
+  - 2026-12-09
+  - 2027-01-27
+  - 2027-03-17
+  - 2027-04-28
+  - 2027-06-09
+  - 2027-07-28
+  - 2027-09-15
+  - 2027-10-27
+  - 2027-12-08
+
+cpi_releases:
+  - 2026-01-13
+  - 2026-02-13
+  - 2026-03-11
+  - 2026-04-10
+  - 2026-05-12
+  - 2026-06-10
+  - 2026-07-14
+  - 2026-08-12
+  - 2026-09-11
+  - 2026-10-14
+  - 2026-11-10
+  - 2026-12-10

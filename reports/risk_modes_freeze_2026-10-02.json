@@ -1,0 +1,12 @@
+{
+ "frozen_at_utc": "2026-10-02T08:27:24+00:00",
+ "note": "Pre-registration for the higher-risk-v2 study, hashed before any result existed, plus the live strategy files.",
+ "sha256": {
+  "reports/risk_modes_preregistration_2026-10-02.md": "a237ed74305830e20b4d2135cb76b659b92e4c206eab976f6eb933f012030b1a",
+  "config/rules.yaml": "7519ecf6853cb4371b9f3153afc8723a2d8a41a5f28ed716ad2b3eb9e870c406",
+  "spot_trd/regime.py": "6009c9034b57708bf3c78fa7baa24aba55f586743bfe9d9b167918c5685ba0a9",
+  "spot_trd/strategy.py": "794b8178d2b169407658d9c79eab35c3e9635f724b097a565262c0b4d98149d5",
+  "spot_trd/sizing.py": "ea871ad2bb975e2bd4b101caf6cc1297267c8a6de94df3413948dc05e839310a",
+  "spot_trd/risk.py": "545553cce1170f53a6891d8913e8e10e92ebd21bac32783e4a89f48acbe45ead"
+ }
+}

@@ -1,0 +1,68 @@
+version: 2
+strategy: pullback         # pullback: laddered limit buys on dips | trend: buy 'breakout_days' closing highs at market
+
+market:
+  exchange: binance
+  symbol: BTC/USDT
+  fee_rate: 0.001          # Binance spot base fee per fill (0.1%)
+  min_notional: 5.0        # Binance minimum order value in USDT (applies to buys and sells)
+  notional_buffer: 1.1     # positions must stay 10% above the minimum even at the stop price
+  qty_step: 0.00001        # BTC lot step size
+
+account:
+  initial_capital: 25.0
+
+risk:
+  risk_pct: 0.01           # max loss per trade as a fraction of current equity
+  small_account:           # 1% can't clear Binance's minimum order on a tiny account
+    below_equity: 50.0
+    risk_pct: 0.02
+  max_cash_use: 0.98
+  floor_pct: 0.05          # halt if equity falls 5% below its peak
+  halt_pause_days: 30
+  max_consecutive_losses: 3
+  streak_pause_days: 7
+
+# Backtest-only fill model for daily bars (audit 2026-10-02). Deliberately pessimistic: a daily bar can't show whether
+# a limit was reached early in the queue, or how a market sell would have filled.
+execution:
+  limit_penetration: 0.0005   # a resting limit buy fills only if the day's low trades 0.05% BELOW it (a touch isn't a fill)
+  exit_at_next_open: true     # regime/time exits are decided at the close, so they fill at the NEXT open
+  exit_slippage: 0.001        # adverse slippage on those next-open market fills
+
+regime:
+  monthly_sma: 10         # 1M: close above 10-month SMA
+  ema_fast: 50             # 1D: EMA50 above EMA200, close above EMA200
+  ema_slow: 200
+  macro:                   # macro gates entries only; exits use the BTC trend
+    spx_sma: 50            # S&P 500 below its 50-day SMA = risk-off
+    dxy_lookback: 20
+    dxy_surge_pct: 0.025   # DXY up >2.5% in 20 trading days = risk-off
+    stress_lookback: 20
+    gold_spike_pct: 0.06   # gold +6% AND oil +10% in 20 days = stress, risk-off
+    oil_spike_pct: 0.10
+
+setup:
+  ema_pullback: 20
+  pullback_tolerance: 0.01 # close within 1% above EMA20 (or below it)
+  rsi_period: 14
+  rsi_max: 55
+  atr_period: 14
+  breakout_days: 20
+
+entry:
+  ladder_atr_offsets: [0.25, 0.75]   # pullback: limit buys at close - k*ATR
+  valid_days: 2
+
+# v2 exits, chosen in reports/research_2026-10-01.md: best 2018-2022 return/drawdown with drawdown <= 10%;
+# 2023+ held up (+17.7%, max DD -9.6% at 2% risk). v1 fixed targets + 10-day max hold had ~no edge.
+exit:
+  stop_atr_mult: 1.0       # initial stop = lowest entry - k*ATR
+  tp1_r: null              # sell tp1_fraction here and move stop to breakeven; null disables
+  tp1_fraction: 0.5
+  tp2_r: null              # sell the rest here; null leaves it to the trailing stop
+  trail_atr_mult: 2.0      # chandelier stop: highest high since entry - k*ATR; null disables
+  regime_exit: true        # sell at close when the 1M/1D BTC trend breaks
+  max_hold_days: null      # null disables
+  stop_slippage: 0.001
+  stop_limit_offset: 0.005  # live stop-limit sells: limit price this far below the trigger so they fill in fast drops

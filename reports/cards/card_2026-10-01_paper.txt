@@ -1,0 +1,18 @@
+[PAPER TRADING]
+=== SPOT-TRD CARD for 2026-10-01 (daily close 2026-09-30, rules v2) ===
+>>> TODAY: NO ACTION. Stay in USDT. A buy plan appears if a daily close is <= 82,803 with RSI < 55.
+Account: equity ~25.00 USDT (cash 25.00). Halal: BTC/USDT spot only, no margin, no Earn.
+BTC close 83,623.60 | EMA20 81,983 | EMA50 77,807 | EMA200 74,451 | RSI 61 | ATR 2,265 (2.7%)
+Gates: 1M uptrend yes | 1D uptrend yes | macro calm yes (S&P weak False, DXY surge False, commodity stress False)
+
+DECISION: NO TRADE. Uptrend intact but no pullback setup (price not back near EMA20 with RSI < 55). Wait; don't chase.
+History (uptrend, no pullback, 1008 days since 2018): BTC 10 days later averaged +2.1%, up 53% of the time, worst 10% -9.6%.
+
+Next card: after the next 00:00 UTC daily close. Rules: pullback entries, trailing stop, 5%-from-peak and 3-loss circuit breakers.
+
+LIVE 85,012.73 at 17:40 UTC (24h +1.21%). Context only; decisions use the daily close.
+  vs EMA20 81,983: +3.7% | vs EMA200 74,451: +14.2%
+  Setup watch: a daily close at or below ~82,803 (EMA20 +1%) with RSI < 55 creates a buy plan; that's 2.6% below the live price.
+  Chart: F:\ryn\spot-trd\reports\chart_2026-10-01_1740.png
+
+Cash: 25.00 USDT (deposited 25.00)

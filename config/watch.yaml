@@ -1,0 +1,14 @@
+# Background monitor (`spot start`). It rewrites dashboard/index.html on every check.
+# Decisions still come only from the daily close; checks in between are early warnings,
+# because your stop-limit and limit orders already rest on Binance.
+daily_run_utc: "00:05"       # 5 min after Binance's daily close, so the candle and macro data are final
+price_check_minutes: 5       # live price + dashboard refresh; faster adds noise, not safety
+stop_near_pct: 0.01          # alert when price is within 1% above your stop
+setup_near_pct: 0.01         # info alert when price is within 1% of the buy-setup trigger
+expiry_warn_minutes: 60      # remind you to cancel unfilled limit buys this long before they expire
+desktop_notifications: false # Windows pop-ups; the dashboard shows everything either way
+notify_no_trade: true        # with pop-ups on: also pop up the daily NO ACTION card
+
+# Cloud (GitHub Actions, see guide section 2): the cloud reads the journal you push with `spot sync`.
+cloud_sync: true             # true: `spot buy/sell/cancel/note` push the journal to GitHub automatically
+cloud_setup_alerts: false    # true: cloud price checks also send "setup may form" info alerts (noisier)

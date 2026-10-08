@@ -1,0 +1,46 @@
+# Runs spot-trd in the cloud so decisions and alerts arrive while your PC is off. Read-only: it never writes the
+# journal. Push the journal with `uv run spot sync` (automatic after buy/sell when cloud_sync: true).
+name: spot-trd
+on:
+  schedule:
+    - cron: "12 0 * * *"      # daily card, after the 00:00 UTC close (GitHub may start it a few minutes late)
+    - cron: "40 */3 * * *"    # live-price alerts every 3 hours (skips quickly when no trade or plan is open)
+  workflow_dispatch:
+    inputs:
+      job:
+        description: daily or check
+        default: daily
+permissions:
+  contents: read
+  issues: write               # notifications arrive as GitHub issues (email + GitHub mobile app)
+concurrency: spot-trd
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}  # optional: phone push via the ntfy app
+      SPOT_BINANCE_MARKET_DATA: "1"          # api.binance.com blocks US cloud IPs; use Binance's market-data mirror
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Install the card's dependencies only (no torch/GPU packages)
+        run: |
+          uv venv --python 3.11
+          uv pip install ccxt pandas pyarrow pyyaml yfinance numpy matplotlib requests
+      - name: Run
+        run: |
+          JOB="${{ github.event.inputs.job }}"
+          if [ -z "$JOB" ]; then
+            if [ "${{ github.event.schedule }}" = "12 0 * * *" ]; then JOB=daily; else JOB=check; fi
+          fi
+          uv run --no-project python -m spot_trd.cloud "$JOB"
+      - name: Dashboard page (download from the run page, open in a browser)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard
+          path: dashboard/index.html
+          if-no-files-found: ignore
+          retention-days: 7

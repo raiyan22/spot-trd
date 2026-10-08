@@ -1,0 +1,24 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+.pytest_cache/
+.env
+data/raw/
+data/state/
+
+# Local-only state (the cloud reads only the journal CSVs and journal/mode)
+logs/
+dashboard/
+journal/status.json
+journal/watch_state.json
+journal/watch.heartbeat
+journal/watch.stop
+reports/charts/

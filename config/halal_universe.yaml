@@ -1,0 +1,19 @@
+allowed_symbols:
+  - BTC/USDT
+
+allowed_market_types:
+  - spot
+
+# Derivatives (ccxt marks them with ':'), leveraged tokens and similar products.
+blocked_patterns:
+  - ":"
+  - "PERP"
+  - "SWAP"
+  - "UP/"
+  - "DOWN/"
+  - "BULL"
+  - "BEAR"
+  - "3L"
+  - "3S"
+  - "5L"
+  - "5S"

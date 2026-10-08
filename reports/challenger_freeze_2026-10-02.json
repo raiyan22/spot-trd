@@ -1,0 +1,14 @@
+{
+ "frozen_at_utc": "2026-10-02T08:10:15+00:00",
+ "note": "Live paper strategy and the pre-registration, hashed before any challenger code or result existed. tests/test_freeze.py fails if any hash changes. To change the live strategy on purpose, record why in a new freeze file; do not edit this one.",
+ "sha256": {
+  "reports/challenger_preregistration_2026-10-02.md": "d5b1cd9f580470458d0f5625ea458804c1940c8a2183246ad5a2e5094aca856a",
+  "config/rules.yaml": "7519ecf6853cb4371b9f3153afc8723a2d8a41a5f28ed716ad2b3eb9e870c406",
+  "config/halal_universe.yaml": "76e42c71134fa8fa430e4a4098f9c2ed70b45b4f92aed6d65e83925f52ea6a08",
+  "spot_trd/regime.py": "6009c9034b57708bf3c78fa7baa24aba55f586743bfe9d9b167918c5685ba0a9",
+  "spot_trd/strategy.py": "794b8178d2b169407658d9c79eab35c3e9635f724b097a565262c0b4d98149d5",
+  "spot_trd/sizing.py": "ea871ad2bb975e2bd4b101caf6cc1297267c8a6de94df3413948dc05e839310a",
+  "spot_trd/risk.py": "545553cce1170f53a6891d8913e8e10e92ebd21bac32783e4a89f48acbe45ead",
+  "spot_trd/indicators.py": "cabb9a0509ff72f1d6e46833897be866b1d827d454d4016ad0b83f1c1a4a9fd9"
+ }
+}

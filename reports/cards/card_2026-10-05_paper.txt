@@ -1,0 +1,13 @@
+[PAPER TRADING]
+=== SPOT-TRD CARD for 2026-10-05 (daily close 2026-10-04, rules v2) ===
+>>> TODAY: NO ACTION. Stay in USDT: the BTC trend/macro filter is closed.
+Account: equity ~300.00 USDT (cash 300.00). Halal: BTC/USDT spot only, no margin, no Earn.
+BTC close 86,530.00 | EMA20 83,057 | EMA50 78,900 | EMA200 74,871 | RSI 69 | ATR 2,196 (2.5%)
+Gates: 1M uptrend yes | 1D uptrend yes | macro calm NO (S&P weak False, DXY surge True, commodity stress False)
+
+DECISION: NO TRADE. Regime gate blocked (see gates above). Stay in USDT.
+History (regime blocked, 1895 days since 2018): BTC 10 days later averaged +0.7%, up 54% of the time, worst 10% -11.6%.
+
+Next card: after the next 00:00 UTC daily close. Rules: pullback entries, trailing stop, 5%-from-peak and 3-loss circuit breakers.
+
+Cash: 300.00 USDT (deposited 300.00)

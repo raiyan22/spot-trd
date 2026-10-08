@@ -1,0 +1,36 @@
+Your action points are short, because the project is in forward observation and most days nothing is required.
+
+One-time, this week
+
+1. Check Binance has "Stop Market" for BTC/USDT spot. If it only offers Stop-Limit, the card prints the fallback prices, so no action is needed beyond knowing which you'll use.
+2. Optionally make your Sharia call in config/sharia_screen.yaml: set user_decision for ETH, SOL, ADA and LTC. Skipping it is fine, since BTC stays the only enabled asset.
+3. Optionally answer three research questions (default is no, and nothing starts without your yes):
+   - a rebalanced "core BTC + trend" design
+   - the Benner cycle
+   - extra assets
+
+Ongoing
+
+- Daily, 2 minutes: after 00:05 UTC glance at the dashboard or run uv run spot last. Most days it says NO ACTION.
+- If a card says BUY: place the card's own two limit orders on Binance and log fills with uv run spot buy --usdt X --btc Y. Then place the market stop and log sells with uv run spot sell .... Without logging, the paper account doesn't move.
+- Weekly: run uv run spot validate and uv run spot growth. After any closed trade, run uv run spot review. If validate shows FAIL, stop opening new trades and come back to me.
+- Whenever the 2027 CPI dates are published (validate warns from early October): add them to config/events.yaml.
+- Know how to stop it: uv run spot autostart off, then uv run spot stop (guide section 2).
+
+Don't
+
+- Don't place a manual limit buy before a card issues a plan.
+- Don't add money, raise risk or change rules to speed up $350.
+- Don't go live when the paper account hits $350, or at $25 (o trade and the expected profit is about $1 a year).
+- Don't place a manual limit buy before a card issues a plan.
+- Don't add money, raise risk or change rules to speed up $350.
+- Don't go live when the paper account hits $350, or at $25 (o trade and the expected profit is about $1 a year).
+
+Come back to me when
+
+- the first paper trade closes,
+- validate shows FAIL,
+- you want to approve any new research,
+- you want to revisit going live. That needs months of forward results first.
+
+I'll do nothing further on my side until you ask.
