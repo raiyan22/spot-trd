@@ -8,6 +8,7 @@ Read first: `guide.md` (how the user runs it), `RESEARCH.md` (everything tested 
 - **v2 is frozen and is the experiment.** Do not change strategy rules, parameters, risk, or assets. Do not start new strategy or execution research unless the user explicitly approves it. Slow growth is not a problem to solve; report honestly if forward results show no edge.
 - Freeze is enforced: `tests/test_freeze.py` fails if any file hashed in `reports/*freeze*.json` changes (rules.yaml, regime/strategy/sizing/risk code, the pre-registrations). A deliberate change needs a new freeze record that says why.
 - **Paper-growth experiment** (started 2026-10-02, `uv run spot growth`): $300, no contributions, target $350 from trading P&L only; milestones $310/320/330/340/350 count REALIZED equity only; risk is not increased at milestones; no real money until a separate decision based on forward evidence. Extra deposits are never profit.
+- **LIVE since 2026-10-08 (user's decision): real 25 USDT, `mode live`, journal `journal/trading_journal.csv`.** The $300 paper record is kept but no longer gets cards. The user invests more only if the $25 shows profit, and keeps asking for a profit guarantee: never give one.
 - User's capital: $25 actually allocated, $300 maximum committable, possible additions $25-$50 (exceptional, at most $100 in any year, at most yearly). 2030 is a research horizon, not a promise or a deadline.
 
 ## Hard constraints
