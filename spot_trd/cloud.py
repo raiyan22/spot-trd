@@ -48,8 +48,10 @@ def notify(key: str, title: str, body: str) -> None:
     if _issue_exists(key):
         print(f"already notified: {key}")
         return
-    subprocess.run(["gh", "issue", "create", "--title", f"[{key}] {title}"[:250], "--body", f"```\n{body}\n```"],
-                   check=True)
+    owner = os.environ.get("GITHUB_REPOSITORY_OWNER")
+    mention = f"@{owner} " if owner else ""  # GitHub emails @mentions by default, even without watching the repo
+    subprocess.run(["gh", "issue", "create", "--title", f"[{key}] {title}"[:250],
+                    "--body", f"{mention}{title}\n\n```\n{body}\n```"], check=True)
     topic = os.environ.get("NTFY_TOPIC")
     if topic:
         import requests
