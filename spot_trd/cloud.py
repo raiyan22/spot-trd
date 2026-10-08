@@ -109,11 +109,21 @@ def check() -> int:
     return 0
 
 
+def test() -> int:
+    """Send one notification through the real path, to confirm email / phone delivery."""
+    now = utcnow()
+    notify(f"test {now:%Y-%m-%d %H:%M}", "Test notification: spot-trd can reach you",
+           "This is a test. Real notifications look like this and arrive only when there is something to do. "
+           "You can close this issue.")
+    return 0
+
+
 def main() -> None:
     cmd = sys.argv[1] if len(sys.argv) > 1 else "daily"
-    if cmd not in ("daily", "check"):
-        raise SystemExit("Usage: python -m spot_trd.cloud daily|check")
-    raise SystemExit(daily() if cmd == "daily" else check())
+    jobs = {"daily": daily, "check": check, "test": test}
+    if cmd not in jobs:
+        raise SystemExit("Usage: python -m spot_trd.cloud daily|check|test")
+    raise SystemExit(jobs[cmd]())
 
 
 if __name__ == "__main__":

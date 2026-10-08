@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       job:
-        description: daily or check
+        description: daily, check or test (sends one test notification)
         default: daily
 permissions:
   contents: read
