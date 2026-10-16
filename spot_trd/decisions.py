@@ -33,6 +33,8 @@ def reason_code(headline: str, last: pd.Series) -> str:
         return headline.split()[0].strip(".").lower()
     if "paused" in headline:
         return "circuit_breaker"
+    if "You skipped" in headline:
+        return "user_skipped"
     if not last["regime_ok"]:
         blocked = [name for name, ok in (("monthly", last["monthly_up"]), ("daily", last["daily_up"]),
                                          ("macro", not last["risk_off"])) if not ok]

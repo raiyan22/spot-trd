@@ -103,3 +103,17 @@ def test_overlapping_plan_is_left_out_of_the_follower_total(jpath):
     add_plan(jpath, "T002", "2026-09-25", [[99_500.0, 0.0001]], 95_000.0, "2026-09-28T00:00:00")
     rows = shadow.build(journal.load_book(RULES, jpath), make_feat(), RULES)
     assert [r.overlap for r in rows] == [False, True]  # a follower was still holding T001
+
+
+def test_a_skipped_plan_blocks_a_new_plan_until_it_expires(jpath):
+    from spot_trd.config import load_universe
+    from spot_trd.run import build_card
+
+    events = {"block_window_days": 1, "fomc_decisions": [], "cpi_releases": []}
+    add_plan(jpath, "T001", "2026-09-29", [[99_500.0, 0.0001]], 95_000.0, "2026-10-02T00:00:00")
+    journal.main(["skip"], path=jpath)
+    book = journal.load_book(RULES, jpath)
+    text, new_plan = build_card(make_feat(), book, RULES, load_universe(), events, pd.Timestamp("2026-10-01 00:05"))
+    assert new_plan is None and ">>> TODAY: NO ACTION. You skipped T001" in text
+    _, new_plan = build_card(make_feat(), book, RULES, load_universe(), events, pd.Timestamp("2026-10-02 00:05"))
+    assert new_plan is not None  # the window is over: the rules may plan again

@@ -219,6 +219,12 @@ def build_card(feat: pd.DataFrame, book: Book, rules: dict, universe: dict, even
             lines.append(f"  Stop once filled: {stop_limit(active.plan['stop'], rules)}")
             headline = (f"KEEP YOUR LIMIT BUY(S) until {valid_until:%Y-%m-%d %H:%M} UTC (not placed yet? place them "
                         "now, see below). If one fills: place the stop order, then `spot buy`.")
+    elif open_trade is None and (skipped := book.skipped_plan(now)) is not None:
+        # The rules never stack plans: a skipped plan's window still blocks a new one, as a resting order would.
+        until = pd.Timestamp(skipped.plan["valid_until"])
+        headline = f"NO ACTION. You skipped {skipped.trade_id}; no new plan before {until:%Y-%m-%d %H:%M} UTC."
+        lines.append(f"DECISION: NO TRADE. You skipped {skipped.trade_id}, whose orders were valid until {until:%Y-%m-%d %H:%M} "
+                     "UTC. A new plan can only come after that (the shadow book tracks what the skipped plan does).")
     elif open_trade is None:
         section, new_plan, headline = entry_section(feat, book, rules, universe, events, card_day, now)
         lines += section

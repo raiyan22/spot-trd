@@ -70,6 +70,13 @@ class Book:
                 return t
         return None
 
+    def skipped_plan(self, now: pd.Timestamp) -> TradeRecord | None:
+        """Latest plan you skipped whose order window hasn't ended yet."""
+        for t in reversed(list(self.trades.values())):
+            if t.skipped and now < pd.Timestamp(t.plan["valid_until"]):
+                return t
+        return None
+
     @property
     def closed_trades(self) -> list[TradeRecord]:
         return [t for t in self.trades.values() if t.closed_at is not None]
