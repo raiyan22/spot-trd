@@ -1,3 +1,4 @@
 time_utc,event,trade_id,btc,usdt,fee_usdt,details,note
 2026-10-08T19:02:58,deposit,,,25.0,,,
 2026-10-15T00:07:23,plan,T001,,,,"{""orders"": [[81128.42187834374, 8e-05], [80021.24563503123, 8e-05]], ""stop"": 77806.8931484062, ""risk_usdt"": 0.48064822743066005, ""valid_until"": ""2026-10-17T00:00:00"", ""signal_date"": ""2026-10-14"", ""rules_version"": 2, ""strategy"": ""pullback""}",
+2026-10-16T17:47:09,skip,T001,,,,,user skipped both orders (told Claude 2026-10-16)
