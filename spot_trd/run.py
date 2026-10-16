@@ -3,6 +3,7 @@ import argparse
 
 import pandas as pd
 
+from spot_trd.clock import daily_close, local, local_hm
 from spot_trd.config import JOURNAL_PATH, PAPER_JOURNAL_PATH, load_events, load_rules, load_universe
 from spot_trd.data import load_data
 from spot_trd.decisions import record_decision
@@ -135,7 +136,7 @@ def entry_section(feat: pd.DataFrame, book: Book, rules: dict, universe: dict, e
 
     valid_until = card_day + pd.Timedelta(days=rules["entry"]["valid_days"])
     lines = [f"DECISION: BUY BTC/USDT, pullback in an uptrend. Risk {risk:.0%} of equity = up to {plan.risk_usdt:.2f} USDT.",
-             f"Place these LIMIT BUY orders now. Cancel any still unfilled at {valid_until:%Y-%m-%d %H:%M} UTC:"]
+             f"Place these LIMIT BUY orders now. Cancel any still unfilled at {local(valid_until)}:"]
     for n, o in enumerate(plan.orders, 1):
         lines.append(f"  {n}) price {o.price:,.2f}  amount {o.qty:.5f} BTC  (~{o.notional:.2f} USDT)")
     lines += [
@@ -147,7 +148,7 @@ def entry_section(feat: pd.DataFrame, book: Book, rules: dict, universe: dict, e
     ]
     n = len(plan.orders)
     headline = (f"PLACE {n} LIMIT BUY ORDER{'S' if n > 1 else ''} NOW (below). Max loss {plan.risk_usdt:.2f} USDT. "
-                f"Cancel unfilled at {valid_until:%Y-%m-%d %H:%M} UTC.")
+                f"Cancel unfilled at {local(valid_until)}.")
     return lines, (plan, valid_until), headline
 
 
@@ -156,7 +157,7 @@ def live_lines(feat: pd.DataFrame, book: Book, rules: dict, ticker: dict, now: p
     last = feat.iloc[-1]
     px = ticker["last"]
     when = pd.Timestamp(ticker["timestamp"], unit="ms")
-    lines = [f"LIVE {px:,.2f} at {when:%H:%M} UTC (24h {ticker['percentage']:+.2f}%). "
+    lines = [f"LIVE {px:,.2f} at {local_hm(when)} (24h {ticker['percentage']:+.2f}%). "
              f"Context only; decisions use the daily close.",
              f"  vs EMA20 {last['ema_pb']:,.0f}: {px / last['ema_pb'] - 1:+.1%} | vs EMA200 {last['ema_slow']:,.0f}: "
              f"{px / last['ema_slow'] - 1:+.1%}"]
@@ -212,24 +213,24 @@ def build_card(feat: pd.DataFrame, book: Book, rules: dict, universe: dict, even
         filled = active.btc_bought > 0
         valid_until = pd.Timestamp(active.plan["valid_until"])
         lines.append(f"{'Remaining orders' if filled else 'Active plan ' + active.trade_id}: limit buys stay valid "
-                     f"until {valid_until:%Y-%m-%d %H:%M} UTC; don't add new ones.")
+                     f"until {local(valid_until)}; don't add new ones.")
         if not filled:
             for n, (p, q) in enumerate(active.plan["orders"], 1):
                 lines.append(f"  {n}) price {p:,.2f}  amount {q:.5f} BTC")
             lines.append(f"  Stop once filled: {stop_limit(active.plan['stop'], rules)}")
-            headline = (f"KEEP YOUR LIMIT BUY(S) until {valid_until:%Y-%m-%d %H:%M} UTC (not placed yet? place them "
+            headline = (f"KEEP YOUR LIMIT BUY(S) until {local(valid_until)} (not placed yet? place them "
                         "now, see below). If one fills: place the stop order, then `spot buy`.")
     elif open_trade is None and (skipped := book.skipped_plan(now)) is not None:
         # The rules never stack plans: a skipped plan's window still blocks a new one, as a resting order would.
         until = pd.Timestamp(skipped.plan["valid_until"])
-        headline = f"NO ACTION. You skipped {skipped.trade_id}; no new plan before {until:%Y-%m-%d %H:%M} UTC."
-        lines.append(f"DECISION: NO TRADE. You skipped {skipped.trade_id}, whose orders were valid until {until:%Y-%m-%d %H:%M} "
-                     "UTC. A new plan can only come after that (the shadow book tracks what the skipped plan does).")
+        headline = f"NO ACTION. You skipped {skipped.trade_id}; no new plan before {local(until)}."
+        lines.append(f"DECISION: NO TRADE. You skipped {skipped.trade_id}, whose orders were valid until {local(until)}"
+                     ". A new plan can only come after that (the shadow book tracks what the skipped plan does).")
     elif open_trade is None:
         section, new_plan, headline = entry_section(feat, book, rules, universe, events, card_day, now)
         lines += section
     lines.insert(1, f">>> TODAY: {headline}")
-    lines += ["", f"Next card: after the next 00:00 UTC daily close. Rules: {rules['strategy']} entries, "
+    lines += ["", f"Next card: after the next daily close ({daily_close()}). Rules: {rules['strategy']} entries, "
                   "trailing stop, 5%-from-peak and 3-loss circuit breakers."]
     return "\n".join(lines), new_plan
 

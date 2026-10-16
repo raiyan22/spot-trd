@@ -8,6 +8,7 @@ import csv
 
 import pandas as pd
 
+from spot_trd.clock import local
 from spot_trd.decisions import log_path, record_decision
 from spot_trd.journal import load_book, record_plan, utcnow
 
@@ -58,11 +59,11 @@ def catch_up(feat: pd.DataFrame, rules: dict, universe: dict, events: dict, path
             if valid_until > now:
                 tid = record_plan(plan, rules, path, valid_until=valid_until)
                 touched = [o.price for o in plan.orders if (feat.loc[card_day:, "low"] <= o.price).any()]
-                note = (f" -> plan {tid} recorded; its limit buys are still valid until {valid_until:%Y-%m-%d %H:%M} UTC."
+                note = (f" -> plan {tid} recorded; its limit buys are still valid until {local(valid_until)}."
                         + (f" Price already traded at {', '.join(f'{p:,.0f}' for p in touched)} since then."
                            if touched else ""))
             else:
-                note = f" -> expired {valid_until:%Y-%m-%d %H:%M} UTC. Nothing to do; don't chase it."
+                note = f" -> expired {local(valid_until)}. Nothing to do; don't chase it."
         current = book.open_trade or book.active_plan(at)
         record_decision(sub, headline, tid or (current.trade_id if current else None), rules, paper)
         lines.append(f"  {card_day.date()}: {headline}{note}")

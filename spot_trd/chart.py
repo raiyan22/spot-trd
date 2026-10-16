@@ -7,6 +7,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from spot_trd.clock import local
 from spot_trd.config import REPORTS_DIR, load_rules
 from spot_trd.data import _exchange, load_data, retry
 from spot_trd.regime import build_features
@@ -57,7 +58,7 @@ def render(feat: pd.DataFrame, ticker: dict, h4: pd.DataFrame, days: int = 150) 
     candles(ax2, h4, 0.12)
     ax2.axhline(live, color="black", linestyle="--", linewidth=0.9)
     ax2.axhline(last["ema_pb"], color="#e6a817", linewidth=1, label=f"daily EMA20 {last['ema_pb']:,.0f}")
-    ax2.set_title(f"4H candles, last 10 days | live {live:,.2f} at {when:%Y-%m-%d %H:%M} UTC "
+    ax2.set_title(f"4H candles, last 10 days | live {live:,.2f} at {local(when)} "
                   f"(24h {ticker['percentage']:+.2f}%)", fontsize=11)
     ax2.legend(loc="upper left", fontsize=8)
     ax2.grid(alpha=0.2)

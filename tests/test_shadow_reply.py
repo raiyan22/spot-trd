@@ -31,8 +31,8 @@ def test_parse_bought_in_either_order_and_with_a_fill_time():
                 "--note", "logged from a GitHub reply"])
     cmd, args = reply.parse("Sold: 0.0000799 btc, 6.62 usdt", AT)
     assert cmd == "sell" and args[2] == "6.62000000" and args[4] == "0.00007990"
-    _, args = reply.parse("bought 6.49 0.0000799 2026-09-24 14:05", AT)
-    assert args[6] == "2026-09-24T14:05:00"
+    _, args = reply.parse("bought 6.49 0.0000799 2026-09-24 14:05", AT)  # typed in UTC+6
+    assert args[6] == "2026-09-24T08:05:00"
 
 
 def test_parse_ignores_quoted_email_text():
@@ -42,7 +42,7 @@ def test_parse_ignores_quoted_email_text():
 
 
 @pytest.mark.parametrize("body", ["", "hello there", "bought 6.49", "bought 6.49 7.1", "note",
-                                  "bought 6.49 0.0000799 2026-09-30 10:00"])
+                                  "bought 6.49 0.0000799 2026-09-30 22:00"])
 def test_parse_rejects_what_it_cannot_log_safely(body):
     with pytest.raises(ValueError):
         reply.parse(body, AT)
@@ -117,3 +117,10 @@ def test_a_skipped_plan_blocks_a_new_plan_until_it_expires(jpath):
     assert new_plan is None and ">>> TODAY: NO ACTION. You skipped T001" in text
     _, new_plan = build_card(make_feat(), book, RULES, load_universe(), events, pd.Timestamp("2026-10-02 00:05"))
     assert new_plan is not None  # the window is over: the rules may plan again
+
+
+def test_times_are_shown_in_utc_plus_6():
+    from spot_trd import clock
+    assert clock.local("2026-10-18 00:00") == "2026-10-18 06:00 UTC+6"
+    assert clock.daily_close() == "06:00 UTC+6"
+    assert clock.from_local("2026-10-18 06:00") == pd.Timestamp("2026-10-18 00:00")

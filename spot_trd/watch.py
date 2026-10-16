@@ -8,6 +8,7 @@ from logging.handlers import RotatingFileHandler
 
 import pandas as pd
 
+from spot_trd.clock import local, local_hm
 from spot_trd.config import JOURNAL_PATH, PAPER_JOURNAL_PATH, ROOT, load_rules, load_watch
 from spot_trd.journal import Book, load_book, utcnow
 from spot_trd.run import trailing_stop
@@ -66,7 +67,7 @@ def check_alerts(feat: pd.DataFrame, book: Book, rules: dict, ticker: dict, now:
         left = pd.Timestamp(active.plan["valid_until"]) - now
         if pd.Timedelta(0) < left <= pd.Timedelta(minutes=cfg["expiry_warn_minutes"]):
             out.append(Alert(f"expiry:{active.trade_id}", "Cancel unfilled limit buys soon",
-                             f"Plan {active.trade_id} expires at {active.plan['valid_until'][:16]} UTC. "
+                             f"Plan {active.trade_id} expires at {local(active.plan['valid_until'])}. "
                              "Cancel any unfilled buys on Binance then."))
 
     last = feat.iloc[-1]
@@ -185,7 +186,7 @@ def update_dashboard(paper: bool, cfg: dict, last_card_day: str | None, now: pd.
             continue
         if c.name == "BTC data fresh" and last_card_day != str(now.date()):
             extra.append(Alert("card-pending", "Today's daily card is pending",
-                               f"It runs at {cfg['daily_run_utc']} UTC (and retries if the download failed). "
+                               f"It runs at {local_hm('2000-01-01 ' + cfg['daily_run_utc'])} (and retries if the download failed). "
                                "The decision shown is from the previous daily close."))
         else:
             issues.append(f"{c.name}: {c.detail}")
@@ -207,7 +208,7 @@ def format_brief(status: dict | None, running: bool | None = None) -> str:
     head = f" spot-trd | {status['mode']}"
     if running is not None:
         head += f" | monitor {'RUNNING' if running else 'STOPPED'}"
-    head += f" | updated {status['generated_at'][:16].replace('T', ' ')} UTC"
+    head += f" | updated {local(status['generated_at'])}"
     lines = [bar, head, f" TODAY: {status['headline']}"]
     lines += [f"   - {s}" for s in status["steps"]]
     lines.append(f" BTC {status['live']:,.0f}{change} | equity {status['equity']:,.2f} USDT | {focus}")
@@ -222,7 +223,7 @@ def format_brief(status: dict | None, running: bool | None = None) -> str:
         if start is not None:
             block = card[start:]
             lines += [" " + l for l in block[:next((i for i, l in enumerate(block) if not l.strip()), len(block))]]
-    lines += [f" Next daily card: {status['next_card_at'][:16].replace('T', ' ')} UTC | dashboard: {DASH_PAGE}", bar]
+    lines += [f" Next daily card: {local(status['next_card_at'])} | dashboard: {DASH_PAGE}", bar]
     return "\n".join(lines)
 
 

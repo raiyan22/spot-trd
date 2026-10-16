@@ -61,7 +61,7 @@ Run in a terminal in `F:\ryn\spot-trd`:
 - **Notifications:** when there is something to do (not NO ACTION), or an alert fires, it opens a GitHub issue in the repo, which GitHub emails you and pushes to the GitHub mobile app. Each card or alert is sent once. Every run's card is also in the repo's Actions tab. Optional phone push: install the ntfy app, subscribe to a long random topic name, and add it as the repo secret `NTFY_TOPIC`.
 - **Tell it what you did, from anywhere:** reply to the notification email, or comment on the issue (github.com or the GitHub app). Only the first line counts, and only your own account is listened to. A bot answers in the issue within a few minutes with "Recorded" (or "Not recorded" and why):
   - `skip`: you won't place the orders
-  - `bought <USDT spent> <BTC received>`, e.g. `bought 6.49 0.0000799` (one reply per fill; add `2026-10-16 14:05` if the fill wasn't today, UTC)
+  - `bought <USDT spent> <BTC received>`, e.g. `bought 6.49 0.0000799` (one reply per fill; add `2026-10-16 20:05` if the fill wasn't today, in your time, UTC+6)
   - `sold <USDT received> <BTC sold>`: you sold, or the stop executed
   - `cancel`, `note <text>`, `status`, `help`
   Each email says which of these fit. Saying nothing counts as "not placed". `.github/workflows/reply.yml` does this (`spot_trd/reply.py`).

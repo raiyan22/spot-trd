@@ -12,3 +12,6 @@ notify_no_trade: true        # with pop-ups on: also pop up the daily NO ACTION 
 # Cloud (GitHub Actions, see guide section 2): the cloud reads the journal you push with `spot sync`.
 cloud_sync: true             # true: `spot buy/sell/cancel/note` push the journal to GitHub automatically
 cloud_setup_alerts: false    # true: cloud price checks also send "setup may form" info alerts (noisier)
+
+# Times on cards, emails, bot replies and the dashboard (decisions and logs stay in UTC; the daily close is 00:00 UTC).
+display_utc_offset_hours: 6  # 6 = UTC+6. Fill times you type in replies are read in this time too.

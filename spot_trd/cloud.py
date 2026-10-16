@@ -16,6 +16,7 @@ import sys
 
 import pandas as pd
 
+from spot_trd.clock import local
 from spot_trd.config import JOURNAL_PATH, PAPER_JOURNAL_PATH, ROOT, load_rules, load_watch
 from spot_trd.journal import load_book, utcnow
 
@@ -124,7 +125,7 @@ def check() -> int:
     ticker, _ = live_snapshot(rules["market"]["symbol"])
     alerts = check_alerts(feat, book, rules, ticker, now, cfg)
     dashboard(paper)
-    summary(f"BTC {ticker['last']:,.0f} at {now:%Y-%m-%d %H:%M} UTC. Alerts: {len(alerts) or 'none'}")
+    summary(f"BTC {ticker['last']:,.0f} at {local(now)}. Alerts: {len(alerts) or 'none'}")
     for a in alerts:
         notify(a.key, a.title, a.message)
     return 0

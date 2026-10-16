@@ -14,6 +14,7 @@ Read first: `guide.md` (how the user runs it), `RESEARCH.md` (everything tested 
 ## Hard constraints
 - Spot only: no leverage, margin, futures, options, shorting, Earn/staking/lending (riba). `spot_trd/halal_guard.py` enforces this. Never weaken it.
 - Risk per trade 2% of equity under 50 USDT, then 1%. Circuit breakers: 3 losses in a row = 7-day pause; 5% below peak = 30-day pause.
+- Times shown to the user are UTC+6 (`spot_trd/clock.py`, `display_utc_offset_hours` in `config/watch.yaml`); everything stored and decided stays UTC.
 - Decisions use completed **daily** candles only. Live prices are context and alerts, never triggers.
 - BTC only. Sharia screening is separate from performance and is the user's decision (`config/sharia_screen.yaml`: only BTC is `approved`; ETH/SOL/ADA carry only a `user_lean` of "probably", not an approval; a test enforces that tradable symbols are approved).
 - A manual limit buy before a v2 plan exists is a different strategy: not allowed. When a card says BUY, place the card's own two limit orders. Protective sell = market stop (Binance STOP_LOSS) with a stop-limit fallback printed on the card (decision 2026-10-02, trigger levels unchanged).
@@ -41,7 +42,7 @@ Thin, unproven edge: about **$1/yr on $25, $9/yr on $300** (return on capital ab
 ## Where things live
 - Code `spot_trd/` (`cli.py` entry; `run.py` card; `backtest.py` engine with `run_portfolio`/`run_backtest`/`entry_mode`; `strategy.py`, `sizing.py`, `regime.py`, `risk.py`; `watch.py` monitor; `dashboard.py`; `journal.py`; `decisions.py`; `growth.py`; study modules `audit`, `universe`, `challengers`, `risk_modes`, `intraday`, `milestone`, `capital`, `limit_entry`).
 - Config `config/` (`rules.yaml` frozen, `events.yaml`, `halal_universe.yaml`, `sharia_screen.yaml`, `watch.yaml`). Journals and logs `journal/`, `logs/` (UTC). Reports `reports/` (frozen pre-registrations and freeze JSONs, `growth_latest.md`, `cards/`, `archive/`).
-- Tests `uv run pytest -q` (139; keep them passing).
+- Tests `uv run pytest -q` (141; keep them passing).
 
 ## Working notes
 - Python 3.11 via uv; torch from the cu130 index (RTX 3060 available).

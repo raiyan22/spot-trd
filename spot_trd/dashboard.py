@@ -5,6 +5,7 @@ import os
 
 import pandas as pd
 
+from spot_trd.clock import label as tz_label, local, local_hm, offset_hours
 from spot_trd.config import ROOT
 from spot_trd.journal import Book
 from spot_trd.run import build_card, trailing_stop
@@ -76,7 +77,7 @@ def build_context(feat: pd.DataFrame, book: Book, rules: dict, universe: dict, e
         levels.append(("Stop once filled", plan_stop))
         steps.append(f"Once filled: stop-market trigger {plan_stop:,.2f} "
                      f"(if only Stop-Limit is offered: limit {plan_stop * (1 - offset):,.2f})")
-        steps.append(f"Cancel unfilled orders at {plan_until:%Y-%m-%d %H:%M} UTC")
+        steps.append(f"Cancel unfilled orders at {local(plan_until)}")
         if focus is None:
             top = max(p for p, _ in plan_orders)
             focus = ("Move to your limit buy", _pct(top, live), f"limit {top:,.0f}")
@@ -107,7 +108,7 @@ def build_context(feat: pd.DataFrame, book: Book, rules: dict, universe: dict, e
            for name, col in (("EMA20", "ema_pb"), ("EMA50", "ema_fast"), ("EMA200", "ema_slow"))}
     setups = [d.strftime("%Y-%m-%d") for d in daily.index[daily["signal"]]]
     h4_candles = [] if h4 is None else [
-        {"time": int(ts.timestamp()), "open": r.open, "high": r.high, "low": r.low, "close": r.close}
+        {"time": int(ts.timestamp() + offset_hours() * 3600), "open": r.open, "high": r.high, "low": r.low, "close": r.close}
         for ts, r in h4.iterrows()]
 
     closed = [{"id": t.trade_id, "entry": str(t.first_buy.date()), "exit": str(t.closed_at.date()),
@@ -130,7 +131,7 @@ def build_context(feat: pd.DataFrame, book: Book, rules: dict, universe: dict, e
         "data_issues": data_issues or [],
         "live": live,
         "live_change": ticker["percentage"] if ticker else None,
-        "live_time": pd.Timestamp(ticker["timestamp"], unit="ms").strftime("%H:%M UTC") if ticker else "unavailable",
+        "live_time": local_hm(pd.Timestamp(ticker["timestamp"], unit="ms")) if ticker else "unavailable",
         "equity": equity,
         "deposited": book.deposited,
         "cash": book.cash,
@@ -287,7 +288,7 @@ footer {{ margin-top: 24px; font-size: 12px; color: var(--muted); }}
 <main>
 <header>
   <h1>BTC/USDT decision board <span class="badge">{ctx['mode']}</span></h1>
-  <div class="small muted">Updated <span id="age">just now</span> · next daily card <span id="next">00:05 UTC</span> · page reloads every {REFRESH_SECONDS // 60} min</div>
+  <div class="small muted">Updated <span id="age">just now</span> · next daily card <span id="next">{local_hm("2000-01-01 00:05")}</span> · page reloads every {REFRESH_SECONDS // 60} min</div>
 </header>
 <div id="stale">This page hasn't been updated for over 12 minutes. Is the monitor running? Run <code>uv run spot start</code>.</div>
 
@@ -394,7 +395,7 @@ Stop the monitor with <code>uv run spot stop</code>.</footer>
       const bar = p.seriesData.get(series);
       let more = '';
       for (const [name, s] of extra) {{ const v = p.seriesData.get(s); if (v) more += '  ' + name + ' ' + fmt(v.value); }}
-      show(bar, typeof p.time === 'string' ? p.time : new Date(p.time * 1000).toISOString().slice(5, 16).replace('T', ' ') + ' UTC', more);
+      show(bar, typeof p.time === 'string' ? p.time : new Date(p.time * 1000).toISOString().slice(5, 16).replace('T', ' ') + ' {tz_label()}', more);
     }});
     return show;
   }}

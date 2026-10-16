@@ -14,15 +14,17 @@ import sys
 
 import pandas as pd
 
+from spot_trd.clock import from_local, local
+
 HELP = """How to reply (one line, as the first line of a comment or of your email reply):
   skip                          you won't place this plan's orders
   bought <USDT> <BTC>           a buy filled: USDT spent and BTC received, from Binance's order history
-                                e.g.  bought 6.49 0.0000799   (add the fill time if it wasn't today: bought 6.49 0.0000799 2026-10-16 14:05)
+                                e.g.  bought 6.49 0.0000799   (add the fill time if it wasn't today: bought 6.49 0.0000799 2026-10-16 20:05)
   sold <USDT> <BTC>             you sold (stop hit or exit): USDT received and BTC sold
   cancel                        you cancelled the plan's unfilled orders
   note <text>                   anything worth remembering
   status                        cash, position and the shadow book
-Times are UTC. Each fill is one reply; for two fills, reply twice."""
+Times are your time (UTC+6), as Binance shows them on your phone. Each fill is one reply; for two fills, reply twice."""
 
 VERBS = {"skip": "skip", "skipped": "skip", "bought": "buy", "buy": "buy", "filled": "buy", "sold": "sell",
          "sell": "sell", "cancel": "cancel", "cancelled": "cancel", "canceled": "cancel", "note": "note",
@@ -55,7 +57,7 @@ def parse(body: str, at: pd.Timestamp) -> tuple[str, list[str]]:
         when = at
         m = WHEN.search(rest)
         if m:
-            when = pd.Timestamp(f"{m.group(1)} {m.group(2) or '12:00'}")
+            when = from_local(f"{m.group(1)} {m.group(2) or '12:00'}")
             rest = rest.replace(m.group(0), " ")
         nums = [float(x) for x in NUMBER.findall(rest.replace(",", " "))]
         if len(nums) != 2:
@@ -64,7 +66,7 @@ def parse(body: str, at: pd.Timestamp) -> tuple[str, list[str]]:
         if btc <= 0 or btc >= 1 or usdt < 1:
             raise ValueError(f"Those numbers don't look like USDT and BTC amounts: `{line[:80]}`.")
         if when > at + pd.Timedelta(minutes=5):
-            raise ValueError(f"The fill time {when:%Y-%m-%d %H:%M} UTC is in the future.")
+            raise ValueError(f"The fill time {local(when)} is in the future.")
         return cmd, [cmd, "--usdt", f"{usdt:.8f}", "--btc", f"{btc:.8f}", "--time", when.isoformat(),
                      "--note", "logged from a GitHub reply"]
     if cmd == "note":

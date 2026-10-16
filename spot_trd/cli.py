@@ -5,6 +5,7 @@ import sys
 import time
 from pathlib import Path
 
+from spot_trd.clock import local_hm
 from spot_trd.config import ROOT
 from spot_trd.journal import utcnow
 
@@ -17,7 +18,7 @@ STARTUP_FILE = (Path(os.environ.get("APPDATA", "")) / "Microsoft" / "Windows" / 
 USAGE = """spot: halal BTC spot trading assistant (mode: {mode})
 
 Daily
-  spot today                 trade card + live price + chart (run after 00:00 UTC)
+  spot today                 trade card + live price + chart (run after the daily close, 06:00 UTC+6)
   spot buy  --usdt X --btc Y log a filled limit buy (numbers from Binance order history)
   spot sell --usdt X --btc Y log a sell (stop hit, trend exit, ...)
   spot cancel                you cancelled a plan's unfilled orders
@@ -91,7 +92,7 @@ def monitor(cmd: str, rest: list[str]) -> None:
             return
         started = time.time()
         _spawn_hidden_monitor()
-        print(f"Monitor started in the background ({get_mode()} mode): daily card at {cfg['daily_run_utc']} UTC, "
+        print(f"Monitor started in the background ({get_mode()} mode): daily card at {local_hm('2000-01-01 ' + cfg['daily_run_utc'])}, "
               f"dashboard refreshed every {cfg['price_check_minutes']} min.")
         print("Catching up and checking the market (first check, up to ~1-2 minutes)...")
         while time.time() - started < 150:  # first check refreshes data and replays any missed days

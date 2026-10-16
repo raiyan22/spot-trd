@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 import pandas as pd
 
 from spot_trd.backtest import EXECUTION_DEFAULTS, Result, _Account, _Asset
+from spot_trd.clock import local
 from spot_trd.config import JOURNAL_PATH, PAPER_JOURNAL_PATH, load_rules
 from spot_trd.journal import Book, TradeRecord, load_book, utcnow
 from spot_trd.sizing import Order
@@ -141,7 +142,7 @@ def describe(s: Shadow) -> str:
     if s.status == "no data":
         return "not replayed yet (needs the next daily candle)"
     if s.status == "waiting":
-        return f"no fill yet (orders valid until {s.valid_until:%Y-%m-%d %H:%M} UTC)"
+        return f"no fill yet (orders valid until {local(s.valid_until)})"
     if s.status == "unfilled":
         return "orders would not have filled; nothing gained or lost"
     filled = ", ".join(str(d.date()) for d in s.fills)
