@@ -1,5 +1,6 @@
-# Runs spot-trd in the cloud so decisions and alerts arrive while your PC is off. Read-only: it never writes the
-# journal. Push the journal with `uv run spot sync` (automatic after buy/sell when cloud_sync: true).
+# Runs spot-trd in the cloud so decisions and alerts arrive while your PC is off. The daily job records the card's
+# decision and any buy plan in the journal and pushes it (the shadow book needs every plan); price checks are read-only.
+# The PC pulls/pushes with `uv run spot sync` (automatic around spot commands when cloud_sync: true).
 name: spot-trd
 on:
   schedule:
@@ -11,7 +12,7 @@ on:
         description: daily, check or test (sends one test notification)
         default: daily
 permissions:
-  contents: read
+  contents: write             # the daily job pushes the card's journal rows
   issues: write               # notifications arrive as GitHub issues (email + GitHub mobile app)
 concurrency: spot-trd
 jobs:
@@ -24,6 +25,8 @@ jobs:
       SPOT_BINANCE_MARKET_DATA: "1"          # api.binance.com blocks US cloud IPs; use Binance's market-data mirror
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v6
       - name: Install the card's dependencies only (no torch/GPU packages)
         run: |
@@ -35,6 +38,8 @@ jobs:
           if [ -z "$JOB" ]; then
             if [ "${{ github.event.schedule }}" = "12 0 * * *" ]; then JOB=daily; else JOB=check; fi
           fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           uv run --no-project python -m spot_trd.cloud "$JOB"
       - name: Dashboard page (download from the run page, open in a browser)
         if: always()

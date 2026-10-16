@@ -30,6 +30,7 @@ class TradeRecord:
     first_buy: pd.Timestamp | None = None
     closed_at: pd.Timestamp | None = None
     cancelled: bool = False
+    skipped: bool = False      # you told the system you would not place this plan's orders
 
     @property
     def held(self) -> float:
@@ -102,9 +103,11 @@ def _num(v: str) -> float:
 def load_book(rules: dict, path: Path = JOURNAL_PATH) -> Book:
     book = Book(rules, trades={})
     dust = rules["market"]["qty_step"]
+    alias: dict[str, str] = {}  # a plan recorded twice (PC and cloud at the same close) counts once
     for e in read_events(path):
         when = pd.Timestamp(e["time_utc"])
         kind, tid = e["event"], e["trade_id"]
+        tid = alias.get(tid, tid)
         btc, usdt, fee = _num(e["btc"]), _num(e["usdt"]), _num(e["fee_usdt"])
         if kind == "deposit":
             book.cash += usdt
@@ -114,7 +117,14 @@ def load_book(rules: dict, path: Path = JOURNAL_PATH) -> Book:
             else:
                 book.breaker.on_deposit(book.cash)
         elif kind == "plan":
-            book.trades[tid] = TradeRecord(tid, json.loads(e["details"]), when)
+            plan = json.loads(e["details"])
+            signal = plan.get("signal_date")
+            same = next((t for t in book.trades.values() if signal and t.plan.get("signal_date") == signal
+                         and t.closed_at is None and not t.cancelled), None)
+            if same is not None:
+                alias[e["trade_id"]] = same.trade_id
+                continue
+            book.trades[tid] = TradeRecord(tid, plan, when)
         elif kind == "buy":
             t = book.trades[tid]
             t.btc_bought += btc
@@ -131,12 +141,20 @@ def load_book(rules: dict, path: Path = JOURNAL_PATH) -> Book:
                 book.breaker.on_trade_closed(when, t.pnl, book.cash)
         elif kind == "cancel":
             book.trades[tid].cancelled = True
+        elif kind == "skip":
+            book.trades[tid].cancelled = book.trades[tid].skipped = True
     return book
 
 
 def record_plan(plan, rules: dict, path: Path = JOURNAL_PATH, trade_id: str | None = None,
                 valid_until: pd.Timestamp | None = None) -> str:
-    tid = trade_id or load_book(rules, path).next_trade_id()
+    book = load_book(rules, path)
+    signal = str(plan.date.date())
+    same = next((t for t in book.trades.values() if t.plan.get("signal_date") == signal
+                 and t.closed_at is None and not t.cancelled), None)
+    if same is not None:  # still-live plan from this close, already recorded (by the PC or the cloud)
+        return same.trade_id
+    tid = trade_id or book.next_trade_id()
     details = {
         "orders": [[o.price, o.qty] for o in plan.orders],
         "stop": plan.stop,
@@ -197,6 +215,9 @@ def main(argv: list[str] | None = None, path: Path | None = None) -> None:
         p.add_argument("--note", default="")
     c = sub.add_parser("cancel", help="you cancelled a plan's unfilled orders")
     c.add_argument("--trade")
+    k = sub.add_parser("skip", help="you won't place this plan's orders (the shadow book still tracks it)")
+    k.add_argument("--trade")
+    k.add_argument("--note", default="")
     n = sub.add_parser("note", help="free-text note (mistakes, emotions, deviations)")
     n.add_argument("text")
     sub.add_parser("status", help="show account state")
@@ -228,6 +249,15 @@ def main(argv: list[str] | None = None, path: Path | None = None) -> None:
         if t is None:
             raise SystemExit("No active plan to cancel.")
         append_event(path, event="cancel", trade_id=t.trade_id)
+    elif args.cmd == "skip":
+        unfilled = [t for t in book.trades.values() if t.btc_bought == 0 and not t.skipped]
+        t = book.trades[args.trade] if args.trade else book.active_plan(now) or (unfilled[-1] if unfilled else None)
+        if t is None:
+            raise SystemExit("No plan to skip.")
+        if t.btc_bought > 0:
+            raise SystemExit(f"{t.trade_id} already has a fill; log `cancel` for the unfilled orders instead.")
+        append_event(path, event="skip", trade_id=t.trade_id, note=args.note)
+        print(f"Logged: you skipped {t.trade_id}. The shadow book keeps tracking what it would have done.")
     elif args.cmd == "note":
         append_event(path, event="note", note=args.text)
     print(status_text(load_book(rules, path)))

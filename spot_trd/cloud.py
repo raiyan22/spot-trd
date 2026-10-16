@@ -1,11 +1,11 @@
 """Cloud runner (GitHub Actions): the daily card and price alerts while your PC is off.
 
-Read-only by design: it never writes the journal or the decision log, so it can't conflict with the PC. It reads the
-journal you pushed with `spot sync` (open trade, stop, active plan) and notifies you:
+It reads the journal (open trade, stop, active plan) and notifies you:
   - always: a summary and the card on the Actions run page, plus the dashboard page as a downloadable artifact;
   - when there is something to do: a GitHub issue in the repo (GitHub emails / pushes it to your phone app),
-    plus an ntfy.sh push if the NTFY_TOPIC secret is set.
-A buy plan the cloud announces is recorded on your PC by the catch-up the next time you run `spot today` or `spot start`.
+    plus an ntfy.sh push if the NTFY_TOPIC secret is set. You answer by replying (see spot_trd/reply.py).
+The daily job records the card's decision and any buy plan in the journal and pushes it (so the shadow book tracks
+every plan even when the PC is off); the price checks stay read-only. The PC pulls before it writes.
 
     python -m spot_trd.cloud daily     # after the 00:00 UTC close
     python -m spot_trd.cloud check     # live-price alerts (stop near/hit, limit touched, expiry)
@@ -51,13 +51,28 @@ def notify(key: str, title: str, body: str) -> None:
     owner = os.environ.get("GITHUB_REPOSITORY_OWNER")
     mention = f"@{owner} " if owner else ""  # GitHub emails @mentions by default, even without watching the repo
     subprocess.run(["gh", "issue", "create", "--title", f"[{key}] {title}"[:250],
-                    "--body", f"{mention}{title}\n\n```\n{body}\n```"], check=True)
+                    "--body", f"{mention}{title}\n\n{reply_hint(title)}\n\n```\n{body}\n```"], check=True)
     topic = os.environ.get("NTFY_TOPIC")
     if topic:
         import requests
 
         requests.post(f"https://ntfy.sh/{topic}", data=body[:3500].encode("utf-8"),
                       headers={"Title": title[:200].encode("utf-8"), "Priority": "high"}, timeout=30)
+
+
+def reply_hint(title: str) -> str:
+    """Tell the user how to report back, in the notification itself (issue body and the email GitHub sends)."""
+    t = title.upper()
+    lines = ["**Tell the system what you did:** reply to this email, or comment on this issue (first line only; "
+             "a bot confirms within a few minutes)."]
+    if any(w in t for w in ("PLACE", "KEEP", "LIMIT", "BUY")):
+        lines += ["- Won't place the orders: `skip`",
+                  "- A buy filled: `bought <USDT spent> <BTC received>`, e.g. `bought 6.49 0.0000799` (one reply per fill)"]
+    if any(w in t for w in ("HOLD", "STOP", "SELL", "CHECK")):
+        lines += ["- You sold or the stop hit: `sold <USDT received> <BTC sold>`, e.g. `sold 6.62 0.0000799`"]
+    lines += ["- Also: `cancel` (unfilled orders cancelled), `note <text>`, `status`, `help`. "
+              "Saying nothing counts as not placed; the shadow book still tracks what following the card would do."]
+    return "\n".join(lines)
 
 
 def dashboard(paper: bool) -> None:
@@ -75,16 +90,20 @@ def daily() -> int:
     from spot_trd.run import produce_card
 
     paper = paper_mode()
-    text, ok = produce_card(paper, refresh=True, record=False, live=False)
+    on_github = os.environ.get("GITHUB_ACTIONS") == "true"
+    text, ok = produce_card(paper, refresh=True, record=on_github, live=False)
+    if on_github:
+        from spot_trd.gitsync import sync
+
+        if not sync(message=f"cloud card {utcnow():%Y-%m-%d}", quiet=True):
+            text += "\n\n[WARN] The cloud couldn't save today's card to the journal; your PC will record it when it runs."
     dashboard(paper)
     summary(text)
     headline = next((l for l in text.splitlines() if l.startswith(">>> TODAY:")), ">>> TODAY: see card")
     headline = headline.removeprefix(">>> TODAY: ")
     day = str(utcnow().date())
     if not ok or not headline.startswith("NO ACTION"):
-        extra = ("\n\nBuy plan: run `uv run spot today` on your PC to record it (or `spot start`), then place the "
-                 "orders shown." if headline.startswith("PLACE") else "")
-        notify(f"card {day}", f"{'(paper) ' if paper else ''}{headline}", text + extra)
+        notify(f"card {day}", f"{'(paper) ' if paper else ''}{headline}", text)
     return 0
 
 

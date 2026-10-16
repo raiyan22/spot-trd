@@ -65,7 +65,7 @@ def replay(events: list[dict], cutoff: pd.Timestamp, dust: float):
             held -= btc
             if t["bought"] - t["sold"] < dust:
                 t["closed"] = when
-        elif kind == "cancel":
+        elif kind in ("cancel", "skip"):
             trades[tid]["cancelled"] = True
     return cash, held, deposits, trades
 

@@ -9,7 +9,7 @@ from spot_trd.config import ROOT
 from spot_trd.journal import utcnow
 
 MODE_FILE = ROOT / "journal" / "mode"
-JOURNAL_COMMANDS = ("deposit", "buy", "sell", "cancel", "note", "status")
+JOURNAL_COMMANDS = ("deposit", "buy", "sell", "cancel", "skip", "note", "status")
 MONITOR_COMMANDS = ("watch", "start", "stop", "last", "autostart", "dashboard")
 STARTUP_FILE = (Path(os.environ.get("APPDATA", "")) / "Microsoft" / "Windows" / "Start Menu" / "Programs"
                 / "Startup" / "spot-trd-monitor.vbs")
@@ -27,6 +27,7 @@ Daily
 Weekly / after each closed trade
   spot review                post-mortem: mistakes and lessons
   spot validate              health scorecard: data, exchange, live vs backtest
+  spot shadow                what following every card would have made vs what you actually did
   spot decisions             the system's daily decisions vs what BTC did next (which rules help/hurt)
   spot capital               is v2 worth continuing at your capital? profit per capital level, +$25/50/100 a year, 2030 horizon
   spot limit-entry           execution comparison for frozen v2 signals (analysis; default stays: no manual limit buy)
@@ -50,7 +51,8 @@ Always-on monitor + live dashboard
   spot watch                 run the monitor in this window (Ctrl+C to stop)
 
 Cloud (GitHub Actions; runs while your PC is off)
-  spot sync                  push your journal so the cloud knows your trade/stop/plan (automatic if cloud_sync: true)
+  spot sync                  push/pull the journal (automatic if cloud_sync: true). Away from the PC, reply to a card's
+                             GitHub issue or email: skip | bought <usdt> <btc> | sold <usdt> <btc> | cancel | note ...
 
 Setup
   spot mode [paper|live]     show or switch mode (paper is the default)
@@ -149,29 +151,17 @@ def monitor(cmd: str, rest: list[str]) -> None:
             print("Autostart OFF. A running monitor keeps going until `spot stop`.")
 
 
-SYNC_FILES = ("journal/paper_journal.csv", "journal/trading_journal.csv", "journal/mode")
+def sync(quiet: bool = False) -> None:
+    """Push your journal and pull what the cloud and your GitHub replies wrote."""
+    from spot_trd.gitsync import sync as git_sync
+    git_sync(quiet=quiet)
 
 
-def sync() -> None:
-    """Push the journal to GitHub so the cloud runner sees your open trade, stop and plans."""
-    def git(*a: str) -> subprocess.CompletedProcess:
-        return subprocess.run(["git", *a], cwd=ROOT, capture_output=True, text=True)
-
-    if not git("remote").stdout.strip():
-        print("Cloud sync: no GitHub remote set up yet (see guide section 2, 'Run it in the cloud').")
-        return
-    files = [f for f in SYNC_FILES if (ROOT / f).exists()]
-    git("add", *files)
-    if git("diff", "--cached", "--quiet").returncode:
-        git("commit", "-m", f"journal update {utcnow():%Y-%m-%d %H:%M} UTC")
-    pull, push = git("pull", "--rebase", "--autostash"), None
-    if pull.returncode == 0:
-        push = git("push")
-    if push is None or push.returncode:
-        err = (push or pull).stderr.strip().splitlines()
-        print(f"Cloud sync FAILED ({err[-1] if err else 'unknown error'}). Your journal is safe locally; retry `spot sync`.")
-    else:
-        print("Cloud sync: journal pushed; the cloud runner will use it from its next run.")
+def pull_first() -> None:
+    """Before reading the journal: fetch anything logged from your phone (GitHub replies) or by the cloud card."""
+    from spot_trd.config import load_watch
+    if load_watch().get("cloud_sync"):
+        sync(quiet=True)
 
 
 def _call(module_main, args: list[str]) -> None:
@@ -212,18 +202,25 @@ def main() -> None:
         sync()
     elif cmd == "today":
         from spot_trd import run
+        pull_first()
         _call(run.main, paper + rest)
+        pull_first()  # push the plan the card just recorded, so the cloud card sees it
     elif cmd in JOURNAL_COMMANDS:
         from spot_trd import journal
+        pull_first()
         journal.main(paper + [cmd, *rest])
-        from spot_trd.config import load_watch
-        if cmd != "status" and load_watch().get("cloud_sync"):
-            sync()
+        if cmd != "status":
+            pull_first()
+    elif cmd == "shadow":
+        from spot_trd import shadow
+        pull_first()
+        shadow.main(paper + rest)
     elif cmd == "review":
         from spot_trd import review
         _call(review.main, paper + rest)
     elif cmd == "decisions":
         from spot_trd import decisions
+        pull_first()
         _call(decisions.main, paper + rest)
     elif cmd == "capital":
         from spot_trd import capital

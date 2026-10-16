@@ -57,12 +57,17 @@ Run in a terminal in `F:\ryn\spot-trd`:
 - Daily cards are saved in `reports/cards/`; the monitor log is `logs/watch.log` (UTC). After any code change, restart it (`stop`, then `start --no-open`), because it keeps old modules loaded.
 
 ### Run it in the cloud (GitHub Actions, PC off)
-`.github/workflows/spot.yml` runs in a **private** GitHub repo: the daily card at about 00:12 UTC, and every 3 hours the live-price alerts (stop near or hit, limit buy touched, cancel-soon). It is read-only. It never writes your journal and never places orders, and it needs no Binance keys.
+`.github/workflows/spot.yml` runs in a **private** GitHub repo: the daily card at about 00:12 UTC, and every 3 hours the live-price alerts (stop near or hit, limit buy touched, cancel-soon). It never places orders and needs no Binance keys. The daily job records the card's decision and any buy plan in the journal and pushes it, so every plan is tracked even when the PC is off; the price checks only read.
 - **Notifications:** when there is something to do (not NO ACTION), or an alert fires, it opens a GitHub issue in the repo, which GitHub emails you and pushes to the GitHub mobile app. Each card or alert is sent once. Every run's card is also in the repo's Actions tab. Optional phone push: install the ntfy app, subscribe to a long random topic name, and add it as the repo secret `NTFY_TOPIC`.
-- **Keep it informed:** the cloud only knows your trade, stop and plan from the journal you push. `uv run spot sync` pushes it, and with `cloud_sync: true` in `config/watch.yaml` it is pushed automatically after `spot buy/sell/cancel/note`.
-- **A buy plan from the cloud:** place the orders from the notification. On your PC, `spot today` (or the monitor) records the same plan through catch-up before you log a fill.
-- Cost: free within GitHub's private-repo allowance (about 2000 minutes a month; this uses about 300 to 450). GitHub can start scheduled runs some minutes late.
-- The PC monitor and the cloud can both run; they don't conflict.
+- **Tell it what you did, from anywhere:** reply to the notification email, or comment on the issue (github.com or the GitHub app). Only the first line counts, and only your own account is listened to. A bot answers in the issue within a few minutes with "Recorded" (or "Not recorded" and why):
+  - `skip`: you won't place the orders
+  - `bought <USDT spent> <BTC received>`, e.g. `bought 6.49 0.0000799` (one reply per fill; add `2026-10-16 14:05` if the fill wasn't today, UTC)
+  - `sold <USDT received> <BTC sold>`: you sold, or the stop executed
+  - `cancel`, `note <text>`, `status`, `help`
+  Each email says which of these fit. Saying nothing counts as "not placed". `.github/workflows/reply.yml` does this (`spot_trd/reply.py`).
+- **Keeping PC and cloud in step:** with `cloud_sync: true` in `config/watch.yaml`, every `spot` command that reads or writes the journal pulls first and pushes after, and the monitor pulls every 30 minutes. `uv run spot sync` does it by hand. Journal rows written on both sides at once are both kept (git union merge), and a plan recorded twice for one close counts once.
+- **Shadow book:** every card's plan is also replayed as if you had placed it exactly (same fill model as the backtests), next to what you actually did. The card and the bot's replies show one line; `uv run spot shadow` lists every plan. It is a record, not proof: with few trades the gap is mostly luck, and it never changes the frozen rules.
+- Cost: free within GitHub's private-repo allowance (about 2000 minutes a month; this uses about 300 to 450, plus about 2 minutes per reply). GitHub can start scheduled runs some minutes late.
 
 ### The dashboard
 `dashboard/index.html` is a local file in your browser (nothing is published). The monitor rewrites it every 5 minutes and the page reloads itself every 2 minutes, so a bookmarked tab stays current. If it stops updating, a red banner says so. From top to bottom:

@@ -30,9 +30,10 @@ Thin, unproven edge: about **$1/yr on $25, $9/yr on $300** (return on capital ab
 - Disclose mistakes and amendments openly (see RESEARCH.md section 15); keep amendments in separate files rather than editing frozen documents.
 
 ## Commands (run from this folder with `uv run spot <cmd>`; `uv run spot` lists all)
-- Daily: `today`, `buy --usdt X --btc Y`, `sell --usdt X --btc Y`, `status`, `note "..."`, `cancel`
+- Daily: `today`, `buy --usdt X --btc Y`, `sell --usdt X --btc Y`, `status`, `note "..."`, `cancel`, `skip`
 - Monitor: `start` / `stop` / `last [--full]` / `dashboard` / `autostart on|off` / `watch` (all print a terminal summary; missed daily closes are replayed by `spot_trd/catchup.py`)
-- Cloud: `.github/workflows/spot.yml` runs `python -m spot_trd.cloud daily|check` (read-only; notifies via GitHub issues, optional ntfy); `sync` pushes the journal
+- Cloud: `.github/workflows/spot.yml` runs `python -m spot_trd.cloud daily|check` (daily records the card's plan/decision and pushes; check is read-only; notifies via GitHub issues, optional ntfy). Replies to an issue/email (`skip`, `bought <usdt> <btc>`, `sold ...`, `cancel`, `note`, `status`) are logged by `.github/workflows/reply.yml` -> `spot_trd/reply.py`. `sync` pulls+pushes the journal and decision logs (union merge); with `cloud_sync: true` spot commands and the monitor sync automatically
+- Shadow book: `shadow` (`spot_trd/shadow.py`) replays every journal plan as if placed exactly, vs what the user did; shown on each card. Bookkeeping only, never a reason to change rules
 - Evaluation: `growth` (the $300 experiment), `decisions`, `review`, `validate`
 - Research: `backtest`, `research`, `upgrades`, `audit`, `universe`, `capital`, `limit-entry`, `laya-eval`, `chart`; and `python -m spot_trd.challengers|risk_modes|intraday|milestone` (intraday needs `data/raw/btc_1h.parquet`)
 - Mode: `mode paper|live` (default paper; separate journals)
@@ -40,7 +41,7 @@ Thin, unproven edge: about **$1/yr on $25, $9/yr on $300** (return on capital ab
 ## Where things live
 - Code `spot_trd/` (`cli.py` entry; `run.py` card; `backtest.py` engine with `run_portfolio`/`run_backtest`/`entry_mode`; `strategy.py`, `sizing.py`, `regime.py`, `risk.py`; `watch.py` monitor; `dashboard.py`; `journal.py`; `decisions.py`; `growth.py`; study modules `audit`, `universe`, `challengers`, `risk_modes`, `intraday`, `milestone`, `capital`, `limit_entry`).
 - Config `config/` (`rules.yaml` frozen, `events.yaml`, `halal_universe.yaml`, `sharia_screen.yaml`, `watch.yaml`). Journals and logs `journal/`, `logs/` (UTC). Reports `reports/` (frozen pre-registrations and freeze JSONs, `growth_latest.md`, `cards/`, `archive/`).
-- Tests `uv run pytest -q` (121; keep them passing).
+- Tests `uv run pytest -q` (139; keep them passing).
 
 ## Working notes
 - Python 3.11 via uv; torch from the cu130 index (RTX 3060 available).

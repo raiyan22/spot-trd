@@ -23,6 +23,7 @@ STATUS_FILE = STATE_DIR / "status.json"  # summary of the last check, printed in
 STATUS_KEYS = ("generated_at", "next_card_at", "mode", "headline", "kind", "steps", "alerts", "data_issues", "live",
                "live_change", "equity", "focus")
 APP_ID = "spot-trd"
+PULL_MINUTES = 30  # how often the monitor pulls the journal from GitHub (fills you logged by replying there)
 
 log = logging.getLogger("spot_trd.watch")
 
@@ -137,7 +138,12 @@ def run_daily(paper: bool, cfg: dict, announce_failure: bool = True) -> bool:
     """Refresh market data, make today's card (recording any new buy plan) and save it."""
     from spot_trd.run import produce_card
 
+    if cfg.get("cloud_sync"):
+        from spot_trd.gitsync import sync
+        sync(quiet=True)  # pull the cloud's card and your phone replies first, so a plan isn't recorded twice
     text, ok = produce_card(paper, live=False)
+    if cfg.get("cloud_sync"):
+        sync(quiet=True)
     day = str(utcnow().date())
     CARDS_DIR.mkdir(parents=True, exist_ok=True)
     path = CARDS_DIR / f"card_{day}{'_paper' if paper else ''}.txt"
@@ -237,12 +243,17 @@ def watch(get_mode) -> None:
     state = _read_state()
     log.info("monitor started: daily card at %s UTC, checks every %s min", cfg["daily_run_utc"], cfg["price_check_minutes"])
     failures = 0
+    last_pull = None
     try:
         while not STOP_FILE.exists():
             now = utcnow()
             paper = get_mode() == "paper"
             HEARTBEAT_FILE.write_text(now.isoformat(), encoding="utf-8")
             try:
+                if cfg.get("cloud_sync") and (last_pull is None or now - last_pull >= pd.Timedelta(minutes=PULL_MINUTES)):
+                    from spot_trd.gitsync import sync
+                    sync(quiet=True)  # fills you logged by replying on GitHub reach the dashboard and alerts
+                    last_pull = now
                 if daily_due(now, state["last_card_day"], cfg["daily_run_utc"]):
                     today = str(now.date())
                     if run_daily(paper, cfg, announce_failure=state.get("fail_day") != today):

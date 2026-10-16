@@ -276,6 +276,13 @@ def produce_card(paper: bool, refresh: bool = True, record: bool = True, live: b
         text += "\n\n" + "\n".join(live_section(feat, load_book(rules, path), rules, now))
     if notes:
         text += "\n\n" + "\n".join(notes)
+    try:
+        from spot_trd.shadow import card_lines
+        shadow = card_lines(load_book(rules, path), feat, rules)
+    except Exception as err:  # bookkeeping must never block the daily decision
+        shadow = [f"[WARN] Shadow book unavailable ({err})."]
+    if shadow:
+        text += "\n\n" + "\n".join(shadow)
     if paper:
         text = "[PAPER TRADING]\n" + text
     return text + "\n\n" + status_text(load_book(rules, path)), True

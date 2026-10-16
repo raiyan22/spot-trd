@@ -1,0 +1,35 @@
+# Your replies to a card (a comment on its issue, or a reply to GitHub's notification email) are logged into the
+# journal: skip | bought <usdt> <btc> | sold <usdt> <btc> | cancel | note <text> | status | help. See spot_trd/reply.py.
+# Only the repo owner's comments are acted on; the bot's own replies never trigger it.
+name: spot-trd replies
+on:
+  issue_comment:
+    types: [created]
+permissions:
+  contents: write             # pushes the journal row
+  issues: write               # answers in the issue
+jobs:
+  reply:
+    if: github.event.comment.user.login == github.repository_owner && !github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SPOT_BINANCE_MARKET_DATA: "1"
+      COMMENT_BODY: ${{ github.event.comment.body }}   # passed as data, never pasted into a shell command
+      COMMENT_TIME: ${{ github.event.comment.created_at }}
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - name: Install the card's dependencies only
+        run: |
+          uv venv --python 3.11
+          uv pip install ccxt pandas pyarrow pyyaml yfinance numpy matplotlib requests
+      - name: Log the reply
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          uv run --no-project python -m spot_trd.reply
