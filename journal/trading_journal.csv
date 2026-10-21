@@ -4,3 +4,4 @@ time_utc,event,trade_id,btc,usdt,fee_usdt,details,note
 2026-10-16T17:47:09,skip,T001,,,,,user skipped both orders (told Claude 2026-10-16)
 2026-10-19T00:09:42,plan,T002,,,,"{""orders"": [[81586.55441046375, 8e-05], [80527.66323139127, 8e-05]], ""stop"": 78409.8808732463, ""risk_usdt"": 0.4616042253388418, ""valid_until"": ""2026-10-21T00:00:00"", ""signal_date"": ""2026-10-18"", ""rules_version"": 2, ""strategy"": ""pullback""}",
 2026-10-19T04:43:13,skip,T002,,,,,via GitHub reply
+2026-10-21T04:43:59,plan,T003,,,,"{""orders"": [[82508.29009116517, 8e-05], [81468.57027349553, 8e-05]], ""stop"": 79389.13063815625, ""risk_usdt"": 0.4543978954403347, ""valid_until"": ""2026-10-23T00:00:00"", ""signal_date"": ""2026-10-20"", ""rules_version"": 2, ""strategy"": ""pullback""}",
