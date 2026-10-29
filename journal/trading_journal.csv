@@ -7,3 +7,4 @@ time_utc,event,trade_id,btc,usdt,fee_usdt,details,note
 2026-10-21T04:43:59,plan,T003,,,,"{""orders"": [[82508.29009116517, 8e-05], [81468.57027349553, 8e-05]], ""stop"": 79389.13063815625, ""risk_usdt"": 0.4543978954403347, ""valid_until"": ""2026-10-23T00:00:00"", ""signal_date"": ""2026-10-20"", ""rules_version"": 2, ""strategy"": ""pullback""}",
 2026-10-21T04:50:04,skip,T003,,,,,via GitHub reply
 2026-10-29T03:45:18,plan,T004,,,,"{""orders"": [[80852.2888135981, 9e-05], [79869.8664407943, 9e-05]], ""stop"": 77905.0216951867, ""risk_usdt"": 0.484586846640966, ""valid_until"": ""2026-10-31T00:00:00"", ""signal_date"": ""2026-10-28"", ""rules_version"": 2, ""strategy"": ""pullback""}",
+2026-10-29T06:03:30,skip,T004,,,,,via GitHub reply
